@@ -20,9 +20,33 @@ final class PortoController: NSObject, NSMenuDelegate {
     private var availableUpdate: AppUpdate?
     private var isCheckingForUpdates = false
 
+    /// Monochrome menu-bar glyph; rendered as a template image so it follows
+    /// the light/dark menu bar like every other status item.
+    private let statusIcon: NSImage? = PortoController.makeStatusIcon()
+
+    private static func makeStatusIcon() -> NSImage? {
+        guard let symbol = NSImage(
+            systemSymbolName: "powerplug",
+            accessibilityDescription: "Open ports"
+        ) else { return nil }
+
+        let configuration = NSImage.SymbolConfiguration(pointSize: 13, weight: .regular)
+        let image = symbol.withSymbolConfiguration(configuration) ?? symbol
+        image.isTemplate = true
+        return image
+    }
+
     func start() {
         statusItem.menu = menu
         menu.delegate = self
+
+        if let statusIcon {
+            let button = statusItem.button
+            button?.image = statusIcon
+            button?.imagePosition = .imageLeading
+            button?.imageScaling = .scaleProportionallyDown
+        }
+
         updateTitle()
         refresh()
         timer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
@@ -97,7 +121,14 @@ final class PortoController: NSObject, NSMenuDelegate {
     }
 
     private func updateTitle() {
-        statusItem.button?.title = ports.isEmpty ? "🔌" : "🔌 \(ports.count)"
+        guard let button = statusItem.button else { return }
+
+        if statusIcon != nil {
+            // Template icon carries the glyph; the title is just the count.
+            button.title = ports.isEmpty ? "" : "\(ports.count)"
+        } else {
+            button.title = ports.isEmpty ? "🔌" : "🔌 \(ports.count)"
+        }
     }
 
     // MARK: - Actions

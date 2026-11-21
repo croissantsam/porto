@@ -6,7 +6,7 @@ A macOS menu bar app that shows your open TCP ports and lets you close them with
 
 ## Features
 
-- **Menu bar icon** showing the count of open ports (`🔌 N`)
+- **Menu bar icon** — a monochrome template plug glyph with the count of open ports; it flips between black and white to match the menu bar
 - **App icon** — custom plug icon for Finder, the Dock, and the app switcher
 - **Click to expand** — each port shows as a submenu with a **✕ Close** action
 - **Auto-refresh** — menu updates every time you open it; background timer updates the count every 2s
