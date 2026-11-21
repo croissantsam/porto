@@ -1,5 +1,5 @@
 //
-// PortoController — the status-bar icon and its menu.
+// PuertoController — the status-bar icon and its menu.
 //
 // The menu lists every open listening port; each port has a submenu
 // with a "✕ Close" action to release the port.
@@ -8,8 +8,8 @@
 import AppKit
 import Foundation
 
-final class PortoController: NSObject, NSMenuDelegate {
-    static let shared = PortoController()
+final class PuertoController: NSObject, NSMenuDelegate {
+    static let shared = PuertoController()
 
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     private let menu = NSMenu()
@@ -23,7 +23,7 @@ final class PortoController: NSObject, NSMenuDelegate {
 
     /// Monochrome menu-bar glyph; rendered as a template image so it follows
     /// the light/dark menu bar like every other status item.
-    private let statusIcon: NSImage? = PortoController.makeStatusIcon()
+    private let statusIcon: NSImage? = PuertoController.makeStatusIcon()
 
     /// Cached so the 2-second menu refresh doesn't query ServiceManagement each time.
     private var launchAtLoginEnabled = LaunchAtLogin.isEnabled
@@ -136,7 +136,7 @@ final class PortoController: NSObject, NSMenuDelegate {
 
         menu.addItem(NSMenuItem.separator())
 
-        let quitItem = NSMenuItem(title: "Quit Porto", action: #selector(quitAction(_:)), keyEquivalent: "")
+        let quitItem = NSMenuItem(title: "Quit Puerto", action: #selector(quitAction(_:)), keyEquivalent: "")
         quitItem.target = self
         menu.addItem(quitItem)
     }
@@ -183,7 +183,7 @@ final class PortoController: NSObject, NSMenuDelegate {
                 self.availableUpdate = nil
                 if manual {
                     self.showAlert(
-                        title: "Porto is up to date",
+                        title: "Puerto is up to date",
                         message: "You're running version \(UpdateChecker.currentVersion ?? "—"), the latest release."
                     )
                 }
@@ -261,10 +261,10 @@ final class PortoController: NSObject, NSMenuDelegate {
     private func showLaunchAtLoginApprovalAlert() {
         let alert = NSAlert()
         alert.alertStyle = .informational
-        alert.messageText = "Allow Porto to launch at login"
+        alert.messageText = "Allow Puerto to launch at login"
         alert.informativeText = """
-        Porto was added to your login items, but macOS needs your approval.
-        Open System Settings → General → Login Items & Extensions and turn on Porto.
+        Puerto was added to your login items, but macOS needs your approval.
+        Open System Settings → General → Login Items & Extensions and turn on Puerto.
         """
         alert.addButton(withTitle: "Open System Settings")
         alert.addButton(withTitle: "Later")

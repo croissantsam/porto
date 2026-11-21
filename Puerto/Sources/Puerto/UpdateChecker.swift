@@ -1,5 +1,5 @@
 //
-// UpdateChecker — checks GitHub Releases for a newer version of Porto.
+// UpdateChecker — checks GitHub Releases for a newer version of Puerto.
 //
 // On every launch the app asks GitHub for the latest published release
 // and compares its tag against the version in Info.plist.
@@ -28,7 +28,7 @@ enum UpdateCheckResult: Equatable {
 
 enum UpdateChecker {
     /// GitHub repository that publishes the releases (owner/name).
-    static let repository = "croissantsam/porto"
+    static let repository = "croissantsam/puerto"
 
     private static let releasesURL = URL(
         string: "https://api.github.com/repos/\(repository)/releases/latest"
@@ -42,7 +42,7 @@ enum UpdateChecker {
         var errorDescription: String? {
             switch self {
             case .notBundled:
-                return "Porto is not running from an app bundle, so its version is unknown."
+                return "Puerto is not running from an app bundle, so its version is unknown."
             case .httpStatus(let code):
                 return "GitHub returned HTTP \(code)."
             case .malformedResponse:
@@ -72,7 +72,7 @@ enum UpdateChecker {
         }
 
         var request = URLRequest(url: releasesURL)
-        request.setValue("Porto/\(currentVersion)", forHTTPHeaderField: "User-Agent")
+        request.setValue("Puerto/\(currentVersion)", forHTTPHeaderField: "User-Agent")
         request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
         request.timeoutInterval = 10
         request.cachePolicy = .reloadIgnoringLocalCacheData
@@ -87,7 +87,7 @@ enum UpdateChecker {
                 result = .failed(UpdateError.httpStatus(http.statusCode).localizedDescription)
             } else if let data,
                       let release = try? JSONDecoder().decode(GitHubRelease.self, from: data) {
-                let asset = release.assets.first { $0.name == "Porto-macos.zip" }
+                let asset = release.assets.first { $0.name == "Puerto-macos.zip" }
                 let update = AppUpdate(
                     version: normalizedVersion(release.tagName),
                     tag: release.tagName,

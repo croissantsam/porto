@@ -1,12 +1,12 @@
 //
-// PortoApp — entry point for the Porto menu bar app.
+// PuertoApp — entry point for the Puerto menu bar app.
 //
 
 import AppKit
 import Foundation
 
 @main
-struct PortoApp {
+struct PuertoApp {
     static func main() {
         // Debug helper: print the discovered listening ports and exit.
         if ProcessInfo.processInfo.arguments.contains("--dump-ports") {
@@ -77,7 +77,7 @@ struct PortoApp {
         let app = NSApplication.shared
         app.setActivationPolicy(.accessory)
 
-        PortoController.shared.start()
+        PuertoController.shared.start()
         app.run()
     }
 }

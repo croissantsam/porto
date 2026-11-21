@@ -20,9 +20,9 @@ enum UpdateInstallerError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .missingDownloadURL:
-            return "The release doesn't include a Porto-macos.zip asset."
+            return "The release doesn't include a Puerto-macos.zip asset."
         case .notAnAppBundle:
-            return "Porto isn't running from an app bundle, so it can't update itself."
+            return "Puerto isn't running from an app bundle, so it can't update itself."
         case .downloadFailed(let message):
             return "Download failed: \(message)."
         case .checksumMismatch(let expected, let actual):
@@ -48,7 +48,7 @@ enum UpdateInstaller {
         }
 
         var request = URLRequest(url: downloadURL)
-        request.setValue("Porto/\(UpdateChecker.currentVersion ?? "0")", forHTTPHeaderField: "User-Agent")
+        request.setValue("Puerto/\(UpdateChecker.currentVersion ?? "0")", forHTTPHeaderField: "User-Agent")
         request.timeoutInterval = 60
 
         URLSession.shared.dataTask(with: request) { data, response, error in
@@ -79,11 +79,11 @@ enum UpdateInstaller {
         }
         guard fm.isWritableFile(atPath: oldAppURL.deletingLastPathComponent().path) else {
             return .failure(UpdateInstallerError.installFailed(
-                "\(oldAppURL.deletingLastPathComponent().path) isn't writable, so Porto can't replace itself."
+                "\(oldAppURL.deletingLastPathComponent().path) isn't writable, so Puerto can't replace itself."
             ))
         }
 
-        let tempDir = fm.temporaryDirectory.appendingPathComponent("PortoUpdate-\(UUID().uuidString)")
+        let tempDir = fm.temporaryDirectory.appendingPathComponent("PuertoUpdate-\(UUID().uuidString)")
         do {
             try fm.createDirectory(at: tempDir, withIntermediateDirectories: true)
         } catch {
@@ -98,7 +98,7 @@ enum UpdateInstaller {
             }
         }
 
-        let zipURL = tempDir.appendingPathComponent("Porto-macos.zip")
+        let zipURL = tempDir.appendingPathComponent("Puerto-macos.zip")
         do {
             try data.write(to: zipURL)
         } catch {
@@ -113,9 +113,9 @@ enum UpdateInstaller {
             return .failure(UpdateInstallerError.extractionFailed(error.localizedDescription))
         }
 
-        let newAppURL = extractDir.appendingPathComponent("Porto.app")
+        let newAppURL = extractDir.appendingPathComponent("Puerto.app")
         guard fm.fileExists(atPath: newAppURL.appendingPathComponent("Contents/Info.plist").path) else {
-            return .failure(UpdateInstallerError.extractionFailed("Porto.app was not found in the archive"))
+            return .failure(UpdateInstallerError.extractionFailed("Puerto.app was not found in the archive"))
         }
 
         scheduleSwapAndRelaunch(

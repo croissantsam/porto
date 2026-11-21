@@ -1,4 +1,4 @@
-name: Build and Release Porto
+name: Build and Release Puerto
 
 on:
   push:
@@ -28,7 +28,7 @@ jobs:
 
       - name: Determine version
         id: version
-        working-directory: ./PortBar
+        working-directory: ./Puerto
         run: |
           if git describe --tags --exact-match 2>/dev/null | grep -q '^v'; then
             VERSION=$(git describe --tags --exact-match | sed 's/^v//')
@@ -43,16 +43,16 @@ jobs:
           echo "TAG=v$VERSION" >> $GITHUB_OUTPUT
 
       - name: Build release binary
-        working-directory: ./PortBar
+        working-directory: ./Puerto
         run: swift build -c release
 
       - name: Assemble .app bundle
-        working-directory: ./PortBar
+        working-directory: ./Puerto
         env:
           VERSION: ${{ steps.version.outputs.VERSION }}
           BUILD_NUMBER: ${{ steps.version.outputs.BUILD_NUMBER }}
         run: |
-          APP_DIR="${PWD}/Porto.app"
+          APP_DIR="${PWD}/Puerto.app"
           rm -rf "$APP_DIR"
           mkdir -p "$APP_DIR/Contents/MacOS" "$APP_DIR/Contents/Resources"
 
@@ -60,17 +60,17 @@ jobs:
           plutil -lint "$APP_DIR/Contents/Info.plist"
 
           cp Resources/AppIcon.icns "$APP_DIR/Contents/Resources/AppIcon.icns"
-          cp .build/release/Porto "$APP_DIR/Contents/MacOS/Porto"
-          chmod +x "$APP_DIR/Contents/MacOS/Porto"
+          cp .build/release/Puerto "$APP_DIR/Contents/MacOS/Puerto"
+          chmod +x "$APP_DIR/Contents/MacOS/Puerto"
 
           echo "APP_DIR=$APP_DIR" >> $GITHUB_ENV
 
       - name: Create zip artifact
-        working-directory: ./PortBar
+        working-directory: ./Puerto
         run: |
           cd "${{ env.APP_DIR }}/.."
-          zip -r Porto-macos.zip Porto.app
-          echo "ZIP_PATH=${PWD}/Porto-macos.zip" >> $GITHUB_ENV
+          zip -r Puerto-macos.zip Puerto.app
+          echo "ZIP_PATH=${PWD}/Puerto-macos.zip" >> $GITHUB_ENV
 
       - name: Create Release
         id: create_release
@@ -80,7 +80,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ steps.version.outputs.TAG }}
-          name: Porto ${{ steps.version.outputs.VERSION }}
+          name: Puerto ${{ steps.version.outputs.VERSION }}
           draft: false
           prerelease: false
           generate_release_notes: true
@@ -89,7 +89,7 @@ jobs:
       - name: Upload .app as workflow artifact (fallback)
         uses: actions/upload-artifact@v4
         with:
-          name: Porto-macos-${{ steps.version.outputs.VERSION }}
+          name: Puerto-macos-${{ steps.version.outputs.VERSION }}
           path: ${{ env.ZIP_PATH }}
           retention-days: 30
 
@@ -110,19 +110,19 @@ jobs:
           rm -rf "$TAP_DIR"
           git clone "https://x-access-token:${TAP_TOKEN}@github.com/croissantsam/homebrew-tap.git" "$TAP_DIR"
 
-          sed -i '' -E "s|^  version \".*\"|  version \"${VERSION}\"|; s|^  sha256 \".*\"|  sha256 \"${SHA256}\"|" "$TAP_DIR/Casks/porto.rb"
+          sed -i '' -E "s|^  version \".*\"|  version \"${VERSION}\"|; s|^  sha256 \".*\"|  sha256 \"${SHA256}\"|" "$TAP_DIR/Casks/puerto.rb"
 
           # Fail loudly if either field didn't land.
-          grep -q "version \"${VERSION}\"" "$TAP_DIR/Casks/porto.rb"
-          grep -q "sha256 \"${SHA256}\"" "$TAP_DIR/Casks/porto.rb"
+          grep -q "version \"${VERSION}\"" "$TAP_DIR/Casks/puerto.rb"
+          grep -q "sha256 \"${SHA256}\"" "$TAP_DIR/Casks/puerto.rb"
 
           cd "$TAP_DIR"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add Casks/porto.rb
+          git add Casks/puerto.rb
           if git diff --cached --quiet; then
             echo "Cask is already up to date — nothing to push."
             exit 0
           fi
-          git commit -m "porto ${VERSION}"
+          git commit -m "puerto ${VERSION}"
           git push

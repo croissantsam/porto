@@ -1,6 +1,6 @@
 #!/usr/bin/env swift
 //
-// make_app_icon.swift — draws Porto's app icon and renders the .iconset.
+// make_app_icon.swift — draws Puerto's app icon and renders the .iconset.
 //
 // Run with:  swift scripts/make_app_icon.swift
 // Then:      iconutil -c icns Resources/AppIcon.iconset -o Resources/AppIcon.icns
@@ -150,7 +150,7 @@ let sizes: [(name: String, pixels: Int)] = [
 
 let root = URL(fileURLWithPath: #filePath)
     .deletingLastPathComponent()      // scripts/
-    .deletingLastPathComponent()      // PortBar/
+    .deletingLastPathComponent()      // Puerto/
 let resources = root.appendingPathComponent("Resources")
 let iconset = resources.appendingPathComponent("AppIcon.iconset")
 

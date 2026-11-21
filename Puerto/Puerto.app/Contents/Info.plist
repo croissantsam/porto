@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleName</key><string>Puerto</string>
+    <key>CFBundleExecutable</key><string>Puerto</string>
+    <key>CFBundleIdentifier</key><string>com.puerto.Puerto</string>
+    <key>CFBundlePackageType</key><string>APPL</string>
+    <key>CFBundleVersion</key><string>18</string>
+    <key>CFBundleShortVersionString</key><string>0.0.18-0b173a5</string>
+    <key>CFBundleIconFile</key><string>AppIcon</string>
+    <key>LSUIElement</key><true/>
+</dict>
+</plist>
