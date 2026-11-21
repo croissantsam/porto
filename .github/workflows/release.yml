@@ -23,7 +23,7 @@ jobs:
       - name: Set up Swift
         uses: swift-actions/setup-swift@v2
         with:
-          swift-version: "latest"
+          swift-version: "5.9"
 
       - name: Determine version
         id: version
