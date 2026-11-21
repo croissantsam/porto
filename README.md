@@ -10,7 +10,7 @@ A macOS menu bar app that shows your open TCP ports and lets you close them with
 - **App icon** — custom plug icon for Finder, the Dock, and the app switcher
 - **Click to expand** — each port shows as a submenu with a **✕ Close** action
 - **Auto-refresh** — menu updates every time you open it; background timer updates the count every 2s
-- **Update check on launch** — quietly asks GitHub for the latest release and adds a **⬇ Update available** item when a newer version exists
+- **In-app updates** — checks GitHub for a newer release at launch, then downloads, verifies, and installs it from the menu before relaunching
 - **Launch at Login** — menu-bar toggle that registers Porto as a login item (macOS 13+)
 - **Filters Apple system processes** — hides `rapportd`, `ControlCenter`, and 40+ other macOS daemons
 - **Safe close** — sends `SIGTERM` then escalates to `SIGKILL` after 0.4s
@@ -66,6 +66,7 @@ and is bumped automatically whenever a release is published (see below).
 | `PortDiscoverer.swift` | Runs `lsof -nP -iTCP -sTCP:LISTEN`, parses output, filters Apple daemons |
 | `PortCloser.swift` | Sends `SIGTERM` → `SIGKILL` to the owning PID |
 | `UpdateChecker.swift` | Fetches the latest GitHub release and compares versions |
+| `UpdateInstaller.swift` | Downloads the release zip, verifies its SHA-256, swaps in the new bundle, relaunches |
 | `LaunchAtLogin.swift` | Registers/unregisters the app as a login item (`SMAppService`, macOS 13+) |
 
 The menu structure:
@@ -128,6 +129,7 @@ PortBar/
 │   ├── PortDiscoverer.swift         # lsof parsing + Apple process filter
 │   ├── PortCloser.swift             # SIGTERM/SIGKILL
 │   ├── UpdateChecker.swift          # GitHub release check
+│   ├── UpdateInstaller.swift        # Download/verify/swap/relaunch
 │   └── LaunchAtLogin.swift          # SMAppService login-item toggle
 └── Porto.app/                       # Built bundle (after build_app.sh)
 ```

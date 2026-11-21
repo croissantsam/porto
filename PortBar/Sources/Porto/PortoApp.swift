@@ -46,6 +46,34 @@ struct PortoApp {
             return
         }
 
+        // Debug helper: download and install the latest release, then exit.
+        if ProcessInfo.processInfo.arguments.contains("--install-update") {
+            UpdateChecker.check { result in
+                switch result {
+                case .updateAvailable(let update):
+                    print("Update available: \(update.tag)")
+                    UpdateInstaller.downloadAndInstall(update) { installResult in
+                        switch installResult {
+                        case .success:
+                            print("Update installed; relaunching…")
+                            exit(0)
+                        case .failure(let error):
+                            print("Install failed: \(error.localizedDescription)")
+                            exit(1)
+                        }
+                    }
+                case .upToDate:
+                    print("Up to date.")
+                    exit(0)
+                case .failed(let message):
+                    print("Update check failed: \(message)")
+                    exit(1)
+                }
+            }
+            RunLoop.main.run()
+            return
+        }
+
         let app = NSApplication.shared
         app.setActivationPolicy(.accessory)
 

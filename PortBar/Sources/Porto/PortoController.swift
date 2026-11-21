@@ -19,6 +19,7 @@ final class PortoController: NSObject, NSMenuDelegate {
 
     private var availableUpdate: AppUpdate?
     private var isCheckingForUpdates = false
+    private var isDownloadingUpdate = false
 
     /// Monochrome menu-bar glyph; rendered as a template image so it follows
     /// the light/dark menu bar like every other status item.
@@ -113,11 +114,14 @@ final class PortoController: NSObject, NSMenuDelegate {
 
         if let availableUpdate {
             let updateItem = NSMenuItem(
-                title: "⬇  Update available — v\(availableUpdate.version)",
-                action: #selector(openUpdate(_:)),
+                title: isDownloadingUpdate
+                    ? "Downloading update…"
+                    : "⬇  Update available — v\(availableUpdate.version)",
+                action: #selector(downloadUpdate(_:)),
                 keyEquivalent: ""
             )
             updateItem.target = self
+            updateItem.isEnabled = !isDownloadingUpdate
             menu.addItem(updateItem)
         }
 
@@ -209,9 +213,26 @@ final class PortoController: NSObject, NSMenuDelegate {
         alert.runModal()
     }
 
-    @objc private func openUpdate(_ sender: NSMenuItem) {
-        guard let availableUpdate else { return }
-        NSWorkspace.shared.open(availableUpdate.htmlURL)
+    @objc private func downloadUpdate(_ sender: NSMenuItem) {
+        guard let availableUpdate, !isDownloadingUpdate else { return }
+
+        isDownloadingUpdate = true
+        sender.title = "Downloading update…"
+        sender.isEnabled = false
+
+        UpdateInstaller.downloadAndInstall(availableUpdate) { [weak self] result in
+            guard let self else { return }
+            self.isDownloadingUpdate = false
+
+            switch result {
+            case .success:
+                // The relaunch script starts the new build once this process exits.
+                NSApp.terminate(self)
+            case .failure(let error):
+                self.showAlert(title: "Couldn't install the update", message: error.localizedDescription)
+                self.rebuildMenuIfHidden()
+            }
+        }
     }
 
     @objc private func checkForUpdatesAction(_ sender: NSMenuItem) {

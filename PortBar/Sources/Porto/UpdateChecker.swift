@@ -14,6 +14,10 @@ struct AppUpdate: Equatable {
     let tag: String
     /// Release page on GitHub.
     let htmlURL: URL
+    /// Direct download URL for the release zip, if the release has one.
+    let downloadURL: URL?
+    /// SHA-256 of the zip from the GitHub API, without the "sha256:" prefix.
+    let sha256: String?
 }
 
 enum UpdateCheckResult: Equatable {
@@ -83,10 +87,13 @@ enum UpdateChecker {
                 result = .failed(UpdateError.httpStatus(http.statusCode).localizedDescription)
             } else if let data,
                       let release = try? JSONDecoder().decode(GitHubRelease.self, from: data) {
+                let asset = release.assets.first { $0.name == "Porto-macos.zip" }
                 let update = AppUpdate(
                     version: normalizedVersion(release.tagName),
                     tag: release.tagName,
-                    htmlURL: release.htmlURL
+                    htmlURL: release.htmlURL,
+                    downloadURL: asset?.browserDownloadURL,
+                    sha256: normalizedDigest(asset?.digest)
                 )
                 result = isNewer(update.version, than: currentVersion)
                     ? .updateAvailable(update)
@@ -122,19 +129,42 @@ enum UpdateChecker {
         return version
     }
 
+    /// "sha256:abc123" → "abc123"; nil for any other digest format.
+    private static func normalizedDigest(_ digest: String?) -> String? {
+        guard let digest else { return nil }
+        let parts = digest.split(separator: ":")
+        guard parts.count == 2, parts[0].lowercased() == "sha256" else { return nil }
+        let hex = String(parts[1]).lowercased()
+        return hex.isEmpty ? nil : hex
+    }
+
     private static func versionComponents(_ version: String) -> [Int] {
         normalizedVersion(version)
             .split(separator: ".")
             .map { Int($0.prefix(while: \.isNumber)) ?? 0 }
     }
 
+    private struct GitHubAsset: Decodable {
+        let name: String
+        let browserDownloadURL: URL
+        let digest: String?
+
+        enum CodingKeys: String, CodingKey {
+            case name
+            case browserDownloadURL = "browser_download_url"
+            case digest
+        }
+    }
+
     private struct GitHubRelease: Decodable {
         let tagName: String
         let htmlURL: URL
+        let assets: [GitHubAsset]
 
         enum CodingKeys: String, CodingKey {
             case tagName = "tag_name"
             case htmlURL = "html_url"
+            case assets
         }
     }
 }
