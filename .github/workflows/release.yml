@@ -1,0 +1,92 @@
+name: Build and Release Porto
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    name: Build & Release
+    runs-on: macos-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Swift
+        uses: swift-actions/setup-swift@v2
+        with:
+          swift-version: "6.4"
+
+      - name: Determine version
+        id: version
+        working-directory: ./PortBar
+        run: |
+          if git describe --tags --exact-match 2>/dev/null | grep -q '^v'; then
+            VERSION=$(git describe --tags --exact-match | sed 's/^v//')
+          else
+            COUNT=$(git rev-list --count HEAD)
+            SHA=$(git rev-parse --short HEAD)
+            VERSION="0.0.${COUNT}-${SHA}"
+          fi
+          BUILD_NUMBER=$(git rev-list --count HEAD)
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "BUILD_NUMBER=$BUILD_NUMBER" >> $GITHUB_OUTPUT
+          echo "TAG=v$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Build release binary
+        working-directory: ./PortBar
+        run: swift build -c release
+
+      - name: Assemble .app bundle
+        working-directory: ./PortBar
+        env:
+          VERSION: ${{ steps.version.outputs.VERSION }}
+          BUILD_NUMBER: ${{ steps.version.outputs.BUILD_NUMBER }}
+        run: |
+          APP_DIR="${PWD}/Porto.app"
+          rm -rf "$APP_DIR"
+          mkdir -p "$APP_DIR/Contents/MacOS"
+
+          ./scripts/generate_info_plist.sh "$APP_DIR/Contents/Info.plist" "${VERSION}" "${BUILD_NUMBER}"
+          plutil -lint "$APP_DIR/Contents/Info.plist"
+
+          cp .build/release/Porto "$APP_DIR/Contents/MacOS/Porto"
+          chmod +x "$APP_DIR/Contents/MacOS/Porto"
+
+          echo "APP_DIR=$APP_DIR" >> $GITHUB_ENV
+
+      - name: Create zip artifact
+        working-directory: ./PortBar
+        run: |
+          cd "${{ env.APP_DIR }}/.."
+          zip -r Porto-macos.zip Porto.app
+          echo "ZIP_PATH=${PWD}/Porto-macos.zip" >> $GITHUB_ENV
+
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.version.outputs.TAG }}
+          name: Porto ${{ steps.version.outputs.VERSION }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: ${{ env.ZIP_PATH }}
+
+      - name: Upload .app as workflow artifact (fallback)
+        uses: actions/upload-artifact@v4
+        with:
+          name: Porto-macos-${{ steps.version.outputs.VERSION }}
+          path: ${{ env.ZIP_PATH }}
+          retention-days: 30
