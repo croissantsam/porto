@@ -21,6 +21,55 @@ struct PortInfo: Hashable, Comparable {
 }
 
 enum PortDiscoverer {
+    /// Known Apple system processes to hide from the port list.
+    private static let appleSystemProcesses: Set<String> = [
+        "rapportd",          // Apple rapport daemon
+        "ControlCe",         // Control Center (truncated by lsof)
+        "ControlCenter",     // Full name
+        "sharingd",          // AirDrop/AirPlay sharing
+        "AirPlayUIAgent",    // AirPlay UI
+        "coreaudiod",        // Core Audio
+        "UserEventAgent",    // User event agent
+        "loginwindow",       // Login window
+        "WindowServer",      // Window server
+        "kernel_task",       // Kernel
+        "launchd",           // Launch daemon
+        "syslogd",           // System logger
+        "distnoted",         // Distributed notifications
+        "cfprefsd",          // Preferences daemon
+        "powerd",            // Power management
+        "hidd",              // Human interface device daemon
+        "locationd",         // Location services
+        "identityservicesd", // Identity services
+        "cloudd",            // iCloud daemon
+        "accountsd",         // Accounts daemon
+        "commerce",          // App Store commerce
+        "storeagent",        // App Store agent
+        "SoftwareUpdate",    // Software update
+        "installd",          // Install daemon
+        "mds",               // Metadata server (Spotlight)
+        "mdworker",          // Metadata worker
+        "Spotlight",         // Spotlight
+        "coreservicesd",     // Core services
+        "trustd",            // Trust daemon
+        "secinitd",          // Security initialization
+        "authd",             // Authorization daemon
+        "systemstats",       // System statistics
+        "diagnosticd",       // Diagnostics
+        "logd",              // Unified logging
+        "usbd",              // USB daemon
+        "bluetoothd",        // Bluetooth daemon
+        "networkd",          // Network daemon
+        "configd",           // Configuration daemon
+        "syspolicyd",        // System policy
+        "tccd",              // Transparency, Consent, Control
+        "coreauthd",         // Core authentication
+        "ocspd",             // OCSP daemon
+        "assetd",            // Asset daemon
+        "storedownloadd",    // Store download daemon
+        "appstored",         // App Store daemon
+    ]
+
     /// Returns the TCP ports currently in the LISTEN state, sorted by port.
     static func ports() -> [PortInfo] {
         guard let lsofPath = lsofPath() else { return [] }
@@ -43,7 +92,11 @@ enum PortDiscoverer {
         process.waitUntilExit()
 
         guard let text = String(data: data, encoding: .utf8) else { return [] }
-        return parse(text)
+        return parse(text).filter { !isAppleSystemProcess($0.command) }
+    }
+
+    private static func isAppleSystemProcess(_ command: String) -> Bool {
+        appleSystemProcesses.contains(command)
     }
 
     static func parse(_ text: String) -> [PortInfo] {

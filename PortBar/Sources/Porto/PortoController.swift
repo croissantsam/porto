@@ -1,8 +1,8 @@
 //
 // PortoController — the status-bar icon and its menu.
 //
-// The menu lists every open listening port; clicking a row closes the
-// port by signalling the process that owns it.
+// The menu lists every open listening port; each port has a submenu
+// with a "✕ Close" action to release the port.
 //
 
 import AppKit
@@ -45,27 +45,24 @@ final class PortoController: NSObject, NSMenuDelegate {
             menu.addItem(none)
         } else {
             for port in ports {
-                // Clicking a row closes the port.
-                let item = NSMenuItem(
-                    title: port.description,
+                // Parent item: shows port info, has submenu
+                let parentItem = NSMenuItem(title: port.description, action: nil, keyEquivalent: "")
+                // Don't disable - we want normal text color. No action = click does nothing.
+
+                let submenu = NSMenu()
+                let closeItem = NSMenuItem(
+                    title: "✕ Close",
                     action: #selector(closePort(_:)),
                     keyEquivalent: ""
                 )
-                item.target = self
-                item.representedObject = port
-                menu.addItem(item)
+                closeItem.target = self
+                closeItem.representedObject = port
+                submenu.addItem(closeItem)
+
+                parentItem.submenu = submenu
+                menu.addItem(parentItem)
             }
         }
-
-        menu.addItem(NSMenuItem.separator())
-
-        let refreshItem = NSMenuItem(
-            title: "⟳ Refresh",
-            action: #selector(refreshItemAction(_:)),
-            keyEquivalent: ""
-        )
-        refreshItem.target = self
-        menu.addItem(refreshItem)
 
         menu.addItem(NSMenuItem.separator())
 
@@ -87,10 +84,6 @@ final class PortoController: NSObject, NSMenuDelegate {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
             self?.refresh()
         }
-    }
-
-    @objc private func refreshItemAction(_ sender: NSMenuItem) {
-        refresh()
     }
 
     @objc private func quitAction(_ sender: NSMenuItem) {
