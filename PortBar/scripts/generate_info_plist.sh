@@ -17,6 +17,7 @@ plist = {
     "CFBundlePackageType": "APPL",
     "CFBundleVersion": "${BUILD_NUMBER}",
     "CFBundleShortVersionString": "${VERSION}",
+    "CFBundleIconFile": "AppIcon",
     "LSUIElement": True,
 }
 plistlib.dump(plist, sys.stdout.buffer, fmt=plistlib.FMT_XML)

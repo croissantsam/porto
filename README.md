@@ -7,8 +7,10 @@ A macOS menu bar app that shows your open TCP ports and lets you close them with
 ## Features
 
 - **Menu bar icon** showing the count of open ports (`🔌 N`)
+- **App icon** — custom plug icon for Finder, the Dock, and the app switcher
 - **Click to expand** — each port shows as a submenu with a **✕ Close** action
 - **Auto-refresh** — menu updates every time you open it; background timer updates the count every 2s
+- **Update check on launch** — quietly asks GitHub for the latest release and adds a **⬇ Update available** item when a newer version exists
 - **Filters Apple system processes** — hides `rapportd`, `ControlCenter`, `postgres`, and 40+ other macOS daemons
 - **Safe close** — sends `SIGTERM` then escalates to `SIGKILL` after 0.4s
 - **Only your processes** — won't touch ports owned by other users
@@ -25,6 +27,7 @@ A macOS menu bar app that shows your open TCP ports and lets you close them with
 cd PortBar
 swift run Porto                # Run the menu bar app
 swift run Porto --dump-ports   # List ports to terminal (debug)
+swift run Porto --check-updates  # Print the latest release / update result (debug)
 ```
 
 ## Build the .app Bundle
@@ -40,10 +43,11 @@ This creates `Porto.app` in the `PortBar` folder. Double-click to run, or drag t
 
 | Component | Purpose |
 |-----------|---------|
-| `PortoApp.swift` | `@main` entry point; handles `--dump-ports` flag |
-| `PortoController.swift` | Status bar item, menu, auto-refresh timer |
+| `PortoApp.swift` | `@main` entry point; handles `--dump-ports` / `--check-updates` flags |
+| `PortoController.swift` | Status bar item, menu, auto-refresh timer, update menu items |
 | `PortDiscoverer.swift` | Runs `lsof -nP -iTCP -sTCP:LISTEN`, parses output, filters Apple daemons |
 | `PortCloser.swift` | Sends `SIGTERM` → `SIGKILL` to the owning PID |
+| `UpdateChecker.swift` | Fetches the latest GitHub release and compares versions |
 
 The menu structure:
 ```
@@ -54,6 +58,9 @@ The menu structure:
     ✕ Close
   *:8080 — python3 ▸
     ✕ Close
+  ───
+  ⬇ Update available — v1.2.3   (only when a newer release exists)
+  Check for Updates…
   ───
   Quit Porto
 ```
@@ -86,13 +93,26 @@ PortBar/
 ├── .gitignore
 ├── scripts/
 │   ├── build_app.sh                 # Builds Porto.app locally
-│   └── generate_info_plist.sh       # Generates versioned Info.plist (Python)
+│   ├── generate_info_plist.sh       # Generates versioned Info.plist (Python)
+│   └── make_app_icon.swift          # Draws Resources/AppIcon.icns
+├── Resources/
+│   ├── AppIcon.icns                 # App icon (all sizes)
+│   └── AppIcon.png                  # 1024×1024 master
 ├── Sources/Porto/
 │   ├── PortoApp.swift               # @main entry
 │   ├── PortoController.swift        # Menu bar + menu logic
 │   ├── PortDiscoverer.swift         # lsof parsing + Apple process filter
-│   └── PortCloser.swift             # SIGTERM/SIGKILL
+│   ├── PortCloser.swift             # SIGTERM/SIGKILL
+│   └── UpdateChecker.swift          # GitHub release check
 └── Porto.app/                       # Built bundle (after build_app.sh)
+```
+
+## Regenerating the App Icon
+
+```bash
+cd PortBar
+swift scripts/make_app_icon.swift
+iconutil -c icns Resources/AppIcon.iconset -o Resources/AppIcon.icns
 ```
 
 ## License

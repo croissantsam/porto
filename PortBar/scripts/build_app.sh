@@ -9,7 +9,7 @@ app="$root/Porto.app"
 swift build --package-path "$root" -c release
 
 rm -rf "$app"
-mkdir -p "$app/Contents/MacOS"
+mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
 
 cat > "$app/Contents/Info.plist" <<'EOF'
 <?xml version="1.0" encoding="UTF-8"?>
@@ -22,11 +22,13 @@ cat > "$app/Contents/Info.plist" <<'EOF'
     <key>CFBundlePackageType</key><string>APPL</string>
     <key>CFBundleVersion</key><string>1</string>
     <key>CFBundleShortVersionString</key><string>1.0</string>
+    <key>CFBundleIconFile</key><string>AppIcon</string>
     <key>LSUIElement</key><true/>
 </dict>
 </plist>
 EOF
 
+cp "$root/Resources/AppIcon.icns" "$app/Contents/Resources/AppIcon.icns"
 cp "$root/.build/release/Porto" "$app/Contents/MacOS/Porto"
 chmod +x "$app/Contents/MacOS/Porto"
 

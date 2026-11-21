@@ -16,6 +16,24 @@ struct PortoApp {
             return
         }
 
+        // Debug helper: print the result of the update check and exit.
+        if ProcessInfo.processInfo.arguments.contains("--check-updates") {
+            let version = UpdateChecker.currentVersion ?? "0.0.0"  // bundle version, or a dev placeholder
+            UpdateChecker.check(versionOverride: version) { result in
+                switch result {
+                case .upToDate:
+                    print("Up to date.")
+                case .updateAvailable(let update):
+                    print("Update available: \(update.tag) — \(update.htmlURL.absoluteString)")
+                case .failed(let message):
+                    print("Update check failed: \(message)")
+                }
+                exit(0)
+            }
+            RunLoop.main.run()
+            return
+        }
+
         let app = NSApplication.shared
         app.setActivationPolicy(.accessory)
 

@@ -54,11 +54,12 @@ jobs:
         run: |
           APP_DIR="${PWD}/Porto.app"
           rm -rf "$APP_DIR"
-          mkdir -p "$APP_DIR/Contents/MacOS"
+          mkdir -p "$APP_DIR/Contents/MacOS" "$APP_DIR/Contents/Resources"
 
           ./scripts/generate_info_plist.sh "$APP_DIR/Contents/Info.plist" "${VERSION}" "${BUILD_NUMBER}"
           plutil -lint "$APP_DIR/Contents/Info.plist"
 
+          cp Resources/AppIcon.icns "$APP_DIR/Contents/Resources/AppIcon.icns"
           cp .build/release/Porto "$APP_DIR/Contents/MacOS/Porto"
           chmod +x "$APP_DIR/Contents/MacOS/Porto"
 
