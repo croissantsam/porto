@@ -34,6 +34,18 @@ struct PortoApp {
             return
         }
 
+        // Debug helper: toggle the login item and print the result.
+        if ProcessInfo.processInfo.arguments.contains("--launch-at-login") {
+            print("supported=\(LaunchAtLogin.isSupported) enabled=\(LaunchAtLogin.isEnabled)")
+            do {
+                let needsApproval = try LaunchAtLogin.setEnabled(!LaunchAtLogin.isEnabled)
+                print("toggled -> enabled=\(LaunchAtLogin.isEnabled) needsApproval=\(needsApproval)")
+            } catch {
+                print("failed: \(error.localizedDescription)")
+            }
+            return
+        }
+
         let app = NSApplication.shared
         app.setActivationPolicy(.accessory)
 

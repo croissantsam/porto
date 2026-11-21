@@ -24,6 +24,9 @@ final class PortoController: NSObject, NSMenuDelegate {
     /// the light/dark menu bar like every other status item.
     private let statusIcon: NSImage? = PortoController.makeStatusIcon()
 
+    /// Cached so the 2-second menu refresh doesn't query ServiceManagement each time.
+    private var launchAtLoginEnabled = LaunchAtLogin.isEnabled
+
     private static func makeStatusIcon() -> NSImage? {
         // SF Symbols need macOS 11+; older systems fall back to the emoji title.
         guard #available(macOS 11.0, *) else { return nil }
@@ -96,6 +99,17 @@ final class PortoController: NSObject, NSMenuDelegate {
         }
 
         menu.addItem(NSMenuItem.separator())
+
+        if LaunchAtLogin.isSupported {
+            let loginItem = NSMenuItem(
+                title: "Launch at Login",
+                action: #selector(toggleLaunchAtLogin(_:)),
+                keyEquivalent: ""
+            )
+            loginItem.target = self
+            loginItem.state = launchAtLoginEnabled ? .on : .off
+            menu.addItem(loginItem)
+        }
 
         if let availableUpdate {
             let updateItem = NSMenuItem(
@@ -204,10 +218,46 @@ final class PortoController: NSObject, NSMenuDelegate {
         checkForUpdates(manual: true)
     }
 
+    @objc private func toggleLaunchAtLogin(_ sender: NSMenuItem) {
+        let shouldEnable = !LaunchAtLogin.isEnabled
+
+        do {
+            let needsApproval = try LaunchAtLogin.setEnabled(shouldEnable)
+            launchAtLoginEnabled = LaunchAtLogin.isEnabled
+            if shouldEnable && needsApproval {
+                showLaunchAtLoginApprovalAlert()
+            }
+        } catch {
+            showAlert(
+                title: "Couldn't change Launch at Login",
+                message: error.localizedDescription
+            )
+        }
+
+        rebuildMenuIfHidden()
+    }
+
+    private func showLaunchAtLoginApprovalAlert() {
+        let alert = NSAlert()
+        alert.alertStyle = .informational
+        alert.messageText = "Allow Porto to launch at login"
+        alert.informativeText = """
+        Porto was added to your login items, but macOS needs your approval.
+        Open System Settings → General → Login Items & Extensions and turn on Porto.
+        """
+        alert.addButton(withTitle: "Open System Settings")
+        alert.addButton(withTitle: "Later")
+
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+        guard let url = URL(string: "x-apple.systempreferences:com.apple.LoginItems-Settings.extension") else { return }
+        NSWorkspace.shared.open(url)
+    }
+
     // MARK: - NSMenuDelegate
 
     func menuWillOpen(_ menu: NSMenu) {
         menuIsOpen = true
+        launchAtLoginEnabled = LaunchAtLogin.isEnabled
         refresh()
     }
 
