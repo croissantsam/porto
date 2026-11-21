@@ -6,8 +6,8 @@
     <key>CFBundleExecutable</key><string>Porto</string>
     <key>CFBundleIdentifier</key><string>com.porto.Porto</string>
     <key>CFBundlePackageType</key><string>APPL</string>
-    <key>CFBundleVersion</key><string>1</string>
-    <key>CFBundleShortVersionString</key><string>1.0</string>
+    <key>CFBundleVersion</key><string>15</string>
+    <key>CFBundleShortVersionString</key><string>0.0.15-67db1ce</string>
     <key>CFBundleIconFile</key><string>AppIcon</string>
     <key>LSUIElement</key><true/>
 </dict>
