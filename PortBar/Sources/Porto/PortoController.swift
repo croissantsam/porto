@@ -25,6 +25,9 @@ final class PortoController: NSObject, NSMenuDelegate {
     private let statusIcon: NSImage? = PortoController.makeStatusIcon()
 
     private static func makeStatusIcon() -> NSImage? {
+        // SF Symbols need macOS 11+; older systems fall back to the emoji title.
+        guard #available(macOS 11.0, *) else { return nil }
+
         guard let symbol = NSImage(
             systemSymbolName: "powerplug",
             accessibilityDescription: "Open ports"
