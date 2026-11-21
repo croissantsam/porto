@@ -11,7 +11,7 @@ A macOS menu bar app that shows your open TCP ports and lets you close them with
 - **Click to expand** — each port shows as a submenu with a **✕ Close** action
 - **Auto-refresh** — menu updates every time you open it; background timer updates the count every 2s
 - **Update check on launch** — quietly asks GitHub for the latest release and adds a **⬇ Update available** item when a newer version exists
-- **Filters Apple system processes** — hides `rapportd`, `ControlCenter`, `postgres`, and 40+ other macOS daemons
+- **Filters Apple system processes** — hides `rapportd`, `ControlCenter`, and 40+ other macOS daemons
 - **Safe close** — sends `SIGTERM` then escalates to `SIGKILL` after 0.4s
 - **Only your processes** — won't touch ports owned by other users
 - **No Dock icon** — pure menu bar app (`LSUIElement`)
@@ -38,6 +38,23 @@ cd PortBar
 ```
 
 This creates `Porto.app` in the `PortBar` folder. Double-click to run, or drag to `/Applications`.
+
+## Install with Homebrew
+
+```bash
+brew tap croissantsam/tap
+brew trust --cask croissantsam/tap/porto   # Homebrew 7+ requires trusting third-party taps
+brew install --cask porto
+```
+
+Later upgrades:
+
+```bash
+brew upgrade --cask porto
+```
+
+The cask lives in [`croissantsam/homebrew-tap`](https://github.com/croissantsam/homebrew-tap)
+and is bumped automatically whenever a release is published (see below).
 
 ## How It Works
 
@@ -77,6 +94,10 @@ The GitHub Actions workflow (`.github/workflows/release.yml`) runs on every push
 4. Zips it → `Porto-macos.zip`
 5. Creates a GitHub Release with the zip as an asset
 6. Also uploads the zip as a workflow artifact (30-day retention)
+7. Bumps the `porto` cask in [`croissantsam/homebrew-tap`](https://github.com/croissantsam/homebrew-tap)
+   with the new version and checksum (needs a `HOMEBREW_TAP_TOKEN` repo secret —
+   a fine-grained PAT with **Contents: read/write** on the tap repo; the step
+   skips itself if the secret is absent)
 
 **To cut a proper release:**
 ```bash
