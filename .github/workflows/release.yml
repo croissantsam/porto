@@ -11,7 +11,7 @@ permissions:
 jobs:
   build-and-release:
     name: Build & Release
-    runs-on: macos-13
+    runs-on: macos-26
     timeout-minutes: 15
 
     steps:
@@ -20,10 +20,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up Swift
-        uses: swift-actions/setup-swift@v2
-        with:
-          swift-version: "5.9"
+      - name: Show toolchain versions
+        run: |
+          sw_vers
+          xcodebuild -version
+          swift --version
 
       - name: Determine version
         id: version
