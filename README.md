@@ -10,7 +10,7 @@ A macOS menu bar app that shows your open TCP ports and lets you close them with
 - **App icon** — custom plug icon for Finder, the Dock, and the app switcher
 - **Click to expand** — each port shows as a submenu with a **✕ Close** action
 - **Auto-refresh** — menu updates every time you open it; background timer updates the count every 2s
-- **In-app updates** — checks GitHub at launch and every 6 hours, then downloads, verifies, and installs the new version automatically before relaunching
+- **In-app updates** — checks GitHub at launch and asks before installing; nothing is downloaded or installed without your say-so
 - **Launch at Login** — menu-bar toggle that registers Puerto as a login item (macOS 13+)
 - **Filters Apple system processes** — hides `rapportd`, `ControlCenter`, and 40+ other macOS daemons
 - **Safe close** — sends `SIGTERM` then escalates to `SIGKILL` after 0.4s

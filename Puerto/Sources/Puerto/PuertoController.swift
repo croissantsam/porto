@@ -14,7 +14,6 @@ final class PuertoController: NSObject, NSMenuDelegate {
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     private let menu = NSMenu()
     private var timer: Timer?
-    private var updateTimer: Timer?
     private var ports: [PortInfo] = []
     private var menuIsOpen = false
 
@@ -61,12 +60,6 @@ final class PuertoController: NSObject, NSMenuDelegate {
             guard let self, !self.menuIsOpen else { return }
             self.refresh()
         }
-
-        // Re-check periodically so a new release is picked up while the app stays open.
-        updateTimer = Timer.scheduledTimer(withTimeInterval: 6 * 60 * 60, repeats: true) { [weak self] _ in
-            self?.checkForUpdates()
-        }
-
         checkForUpdates()
     }
 
@@ -196,8 +189,8 @@ final class PuertoController: NSObject, NSMenuDelegate {
                 }
             case .updateAvailable(let update):
                 self.availableUpdate = update
-                // Install automatically — no click required.
-                self.downloadUpdate(update)
+                // Ask first — never install without the user's say-so.
+                self.showUpdateAvailableAlert(for: update)
             case .failed(let message):
                 if manual {
                     self.showAlert(title: "Couldn't check for updates", message: message)
@@ -213,13 +206,38 @@ final class PuertoController: NSObject, NSMenuDelegate {
         rebuildMenu()
     }
 
+    /// Runs a modal alert. Accessory apps can't reliably own a modal window, so
+    /// temporarily switch to a regular app while it's up.
+    private func runAlert(_ alert: NSAlert) -> NSApplication.ModalResponse {
+        let wasAccessory = NSApp.activationPolicy() == .accessory
+        if wasAccessory { NSApp.setActivationPolicy(.regular) }
+        NSApp.activate(ignoringOtherApps: true)
+        let response = alert.runModal()
+        if wasAccessory { NSApp.setActivationPolicy(.accessory) }
+        return response
+    }
+
     private func showAlert(title: String, message: String) {
         let alert = NSAlert()
         alert.alertStyle = .informational
         alert.messageText = title
         alert.informativeText = message
         alert.addButton(withTitle: "OK")
-        alert.runModal()
+        _ = runAlert(alert)
+    }
+
+    /// Shown at startup (and after a manual check) when a newer release exists.
+    /// Nothing is downloaded or installed until the user chooses "Install Update".
+    private func showUpdateAvailableAlert(for update: AppUpdate) {
+        let alert = NSAlert()
+        alert.alertStyle = .informational
+        alert.messageText = "Puerto \(update.version) is available"
+        alert.informativeText = "A new version of Puerto is ready to install. Update now?"
+        alert.addButton(withTitle: "Install Update")
+        alert.addButton(withTitle: "Later")
+
+        guard runAlert(alert) == .alertFirstButtonReturn else { return }
+        downloadUpdate(update)
     }
 
     private func downloadUpdate(_ update: AppUpdate) {
@@ -282,7 +300,7 @@ final class PuertoController: NSObject, NSMenuDelegate {
         alert.addButton(withTitle: "Open System Settings")
         alert.addButton(withTitle: "Later")
 
-        guard alert.runModal() == .alertFirstButtonReturn else { return }
+        guard runAlert(alert) == .alertFirstButtonReturn else { return }
         guard let url = URL(string: "x-apple.systempreferences:com.apple.LoginItems-Settings.extension") else { return }
         NSWorkspace.shared.open(url)
     }
