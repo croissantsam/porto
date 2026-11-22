@@ -1,0 +1,84 @@
+name: Toolchain check
+
+# macos-latest tracks the newest GitHub-hosted macOS image, but GitHub rolls
+# those out gradually. This job compares the runner's Xcode against the
+# default Xcode listed for that macOS version in actions/runner-images and
+# opens (or updates) a tracking issue when the runner is behind.
+#
+# Note: Xcode's Swift version (e.g. 6.3.3) is Apple's release train and does
+# not map to swift.org's open-source toolchain numbers, so compare Xcode.
+
+on:
+  schedule:
+    - cron: "37 6 * * 1" # Mondays 06:37 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    name: Compare runner Xcode
+    runs-on: macos-latest
+    steps:
+      - name: Check Xcode version
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          INSTALLED=$(xcodebuild -version | sed -nE 's/^Xcode ([0-9]+\.[0-9]+(\.[0-9]+)?).*/\1/p' | head -1)
+          OS_MAJOR=$(sw_vers -productVersion | cut -d. -f1)
+          README="https://raw.githubusercontent.com/actions/runner-images/main/images/macos/macos-${OS_MAJOR}-Readme.md"
+
+          echo "Runner: macOS ${OS_MAJOR}, Xcode ${INSTALLED}"
+
+          LATEST=$(curl -fsSL "$README" 2>/dev/null \
+            | grep -E '^\| [0-9]+\.[0-9]+.*\(default\)' \
+            | grep -i xcode \
+            | head -1 \
+            | sed -E 's/^\| ([0-9.]+).*/\1/' || true)
+
+          if [ -z "$LATEST" ]; then
+            echo "::notice::No runner-images catalog for macOS ${OS_MAJOR} yet — skipping."
+            exit 0
+          fi
+
+          echo "macos-latest catalog: Xcode ${LATEST}"
+
+          TITLE="Newer Xcode available for macos-latest"
+          EXISTING=$(gh issue list --state open --limit 100 --json number,title | python3 -c "
+          import json, sys
+          for issue in json.load(sys.stdin):
+              if issue['title'] == '$TITLE':
+                  print(issue['number'])
+                  break
+          ")
+
+          # Ignore cases where the runner is already newer than the catalog.
+          if [ "$INSTALLED" != "$LATEST" ]; then
+            NEWEST=$(printf '%s\n%s\n' "$INSTALLED" "$LATEST" | sort -V | tail -1)
+            [ "$NEWEST" = "$LATEST" ] || { echo "Runner Xcode ${INSTALLED} is newer than the catalog — nothing to do."; exit 0; }
+          fi
+
+          if [ "$INSTALLED" = "$LATEST" ]; then
+            echo "Toolchain is up to date."
+            if [ -n "$EXISTING" ]; then
+              gh issue comment "$EXISTING" --body "Resolved: the runner now has Xcode ${INSTALLED}."
+              gh issue close "$EXISTING"
+            fi
+            exit 0
+          fi
+
+          BODY="The \`macos-latest\` runner has Xcode ${INSTALLED}, but the runner-images catalog for macOS ${OS_MAJOR} lists Xcode ${LATEST} as the default.
+
+          GitHub updates runner images on its own schedule. To pick up the newer Xcode sooner, select it explicitly in the release workflow (e.g. \`sudo xcode-select -s /Applications/Xcode_${LATEST}.app\`)."
+
+          if [ -n "$EXISTING" ]; then
+            echo "Updating issue #${EXISTING}"
+            gh issue edit "$EXISTING" --body "$BODY"
+          else
+            echo "Creating tracking issue"
+            gh issue create --title "$TITLE" --body "$BODY"
+          fi

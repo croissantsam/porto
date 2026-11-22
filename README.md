@@ -106,10 +106,14 @@ The GitHub Actions workflow (`.github/workflows/release.yml`) runs on every push
 Builds run on `macos-latest`, which tracks the newest GitHub-hosted macOS image,
 so the newest Xcode/Swift toolchain is used without a pinned `setup-swift` step.
 The **Show toolchain versions** step logs the exact Xcode and Swift versions for
-each release. Note that Xcode's Swift version (e.g. 6.3.3) is Apple's release
-train and doesn't map one-to-one to swift.org's open-source toolchain numbers
-(e.g. 6.4.3), so compare Xcode versions — not Swift versions — when checking
-whether the runner is current.
+each release.
+
+A weekly **Toolchain check** workflow compares the runner's Xcode against the
+default Xcode listed for that macOS version in
+[`actions/runner-images`](https://github.com/actions/runner-images) and opens a
+tracking issue when the runner is behind. Note that Xcode's Swift version (e.g.
+6.3.3) is Apple's release train and doesn't map one-to-one to swift.org's
+open-source toolchain numbers (e.g. 6.4.3), so the check compares Xcode versions.
 
 **To cut a proper release:**
 ```bash
