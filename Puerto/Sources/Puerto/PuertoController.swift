@@ -14,6 +14,7 @@ final class PuertoController: NSObject, NSMenuDelegate {
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     private let menu = NSMenu()
     private var timer: Timer?
+    private var updateTimer: Timer?
     private var ports: [PortInfo] = []
     private var menuIsOpen = false
 
@@ -60,6 +61,12 @@ final class PuertoController: NSObject, NSMenuDelegate {
             guard let self, !self.menuIsOpen else { return }
             self.refresh()
         }
+
+        // Re-check periodically so a new release is picked up while the app stays open.
+        updateTimer = Timer.scheduledTimer(withTimeInterval: 6 * 60 * 60, repeats: true) { [weak self] _ in
+            self?.checkForUpdates()
+        }
+
         checkForUpdates()
     }
 
@@ -115,9 +122,9 @@ final class PuertoController: NSObject, NSMenuDelegate {
         if let availableUpdate {
             let updateItem = NSMenuItem(
                 title: isDownloadingUpdate
-                    ? "Downloading update…"
+                    ? "Updating to v\(availableUpdate.version)…"
                     : "⬇  Update available — v\(availableUpdate.version)",
-                action: #selector(downloadUpdate(_:)),
+                action: #selector(downloadUpdateAction(_:)),
                 keyEquivalent: ""
             )
             updateItem.target = self
@@ -189,6 +196,8 @@ final class PuertoController: NSObject, NSMenuDelegate {
                 }
             case .updateAvailable(let update):
                 self.availableUpdate = update
+                // Install automatically — no click required.
+                self.downloadUpdate(update)
             case .failed(let message):
                 if manual {
                     self.showAlert(title: "Couldn't check for updates", message: message)
@@ -213,14 +222,13 @@ final class PuertoController: NSObject, NSMenuDelegate {
         alert.runModal()
     }
 
-    @objc private func downloadUpdate(_ sender: NSMenuItem) {
-        guard let availableUpdate, !isDownloadingUpdate else { return }
+    private func downloadUpdate(_ update: AppUpdate) {
+        guard !isDownloadingUpdate else { return }
 
         isDownloadingUpdate = true
-        sender.title = "Downloading update…"
-        sender.isEnabled = false
+        rebuildMenuIfHidden()
 
-        UpdateInstaller.downloadAndInstall(availableUpdate) { [weak self] result in
+        UpdateInstaller.downloadAndInstall(update) { [weak self] result in
             guard let self else { return }
             self.isDownloadingUpdate = false
 
@@ -233,6 +241,11 @@ final class PuertoController: NSObject, NSMenuDelegate {
                 self.rebuildMenuIfHidden()
             }
         }
+    }
+
+    @objc private func downloadUpdateAction(_ sender: NSMenuItem) {
+        guard let availableUpdate else { return }
+        downloadUpdate(availableUpdate)
     }
 
     @objc private func checkForUpdatesAction(_ sender: NSMenuItem) {

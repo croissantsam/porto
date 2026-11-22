@@ -10,7 +10,7 @@ A macOS menu bar app that shows your open TCP ports and lets you close them with
 - **App icon** — custom plug icon for Finder, the Dock, and the app switcher
 - **Click to expand** — each port shows as a submenu with a **✕ Close** action
 - **Auto-refresh** — menu updates every time you open it; background timer updates the count every 2s
-- **In-app updates** — checks GitHub for a newer release at launch, then downloads, verifies, and installs it from the menu before relaunching
+- **In-app updates** — checks GitHub at launch and every 6 hours, then downloads, verifies, and installs the new version automatically before relaunching
 - **Launch at Login** — menu-bar toggle that registers Puerto as a login item (macOS 13+)
 - **Filters Apple system processes** — hides `rapportd`, `ControlCenter`, and 40+ other macOS daemons
 - **Safe close** — sends `SIGTERM` then escalates to `SIGKILL` after 0.4s
@@ -27,6 +27,7 @@ A macOS menu bar app that shows your open TCP ports and lets you close them with
 ```bash
 cd Puerto
 swift run Puerto                # Run the menu bar app
+swift test                      # Run unit tests
 swift run Puerto --dump-ports   # List ports to terminal (debug)
 swift run Puerto --check-updates  # Print the latest release / update result (debug)
 ```
@@ -90,15 +91,17 @@ The menu structure:
 
 The GitHub Actions workflow (`.github/workflows/release.yml`) runs on every push to `main`:
 
-1. **Determines version**:
+1. **Test** — `swift test` (version-comparison and login-item availability tests) runs first and gates the release job
+2. **Determine version**:
    - Tagged `v*` → uses tag (e.g., `v1.2.0` → version `1.2.0`)
    - Untagged → `0.0.<commit-count>-<short-sha>` (e.g., `0.0.42-d9f3048`)
-2. Builds release binary
-3. Assembles `Puerto.app` with versioned `Info.plist`
-4. Zips it → `Puerto-macos.zip`
-5. Creates a GitHub Release with the zip as an asset
-6. Also uploads the zip as a workflow artifact (30-day retention)
-7. Bumps the `puerto` cask in [`croissantsam/homebrew-tap`](https://github.com/croissantsam/homebrew-tap)
+3. Builds release binary
+4. Assembles `Puerto.app` with versioned `Info.plist`
+5. **Smoke tests** — verifies the bundle is executable, has its icon, advertises the right version, `--dump-ports` works, the app stays running for 3 seconds after launch, and the zip contains the app
+6. Zips it → `Puerto-macos.zip`
+7. Creates a GitHub Release with the zip as an asset
+8. Also uploads the zip as a workflow artifact (30-day retention)
+9. Bumps the `puerto` cask in [`croissantsam/homebrew-tap`](https://github.com/croissantsam/homebrew-tap)
    with the new version and checksum (needs a `HOMEBREW_TAP_TOKEN` repo secret —
    a fine-grained PAT with **Contents: read/write** on the tap repo; the step
    skips itself if the secret is absent)

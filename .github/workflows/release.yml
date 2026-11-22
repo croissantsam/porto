@@ -9,8 +9,29 @@ permissions:
   contents: write
 
 jobs:
+  test:
+    name: Test
+    runs-on: macos-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Show toolchain versions
+        run: |
+          sw_vers
+          xcodebuild -version
+          swift --version
+
+      - name: Run unit tests
+        working-directory: ./Puerto
+        run: swift test
+
   build-and-release:
     name: Build & Release
+    needs: test
     # macos-latest tracks the newest GitHub-hosted macOS image, so builds always
     # use the newest Xcode/Swift toolchain without downloading one.
     runs-on: macos-latest
@@ -67,12 +88,48 @@ jobs:
 
           echo "APP_DIR=$APP_DIR" >> $GITHUB_ENV
 
+      - name: Smoke test the bundle
+        working-directory: ./Puerto
+        run: |
+          set -euo pipefail
+          APP="$PWD/Puerto.app"
+
+          test -x "$APP/Contents/MacOS/Puerto"
+          test -f "$APP/Contents/Resources/AppIcon.icns"
+
+          # The bundle must advertise the same version CI is about to tag.
+          PLIST_VERSION=$(plutil -extract CFBundleShortVersionString raw "$APP/Contents/Info.plist")
+          if [ "$PLIST_VERSION" != "${{ steps.version.outputs.VERSION }}" ]; then
+            echo "::error::Info.plist version '$PLIST_VERSION' != '${{ steps.version.outputs.VERSION }}'"
+            exit 1
+          fi
+
+          # Exercise the headless entry points.
+          "$APP/Contents/MacOS/Puerto" --dump-ports >/dev/null
+
+          # Launch the menu bar app and make sure it stays up.
+          "$APP/Contents/MacOS/Puerto" & pid=$!
+          sleep 3
+          if ! kill -0 "$pid" 2>/dev/null; then
+            echo "::error::Puerto exited immediately after launch"
+            wait "$pid" || true
+            exit 1
+          fi
+          kill "$pid" 2>/dev/null || true
+          wait "$pid" 2>/dev/null || true
+
       - name: Create zip artifact
         working-directory: ./Puerto
         run: |
           cd "${{ env.APP_DIR }}/.."
           zip -r Puerto-macos.zip Puerto.app
           echo "ZIP_PATH=${PWD}/Puerto-macos.zip" >> $GITHUB_ENV
+
+      - name: Verify zip contents
+        working-directory: ./Puerto
+        run: |
+          unzip -l Puerto-macos.zip | grep -q "Puerto.app/Contents/MacOS/Puerto"
+          unzip -l Puerto-macos.zip | grep -q "Puerto.app/Contents/Resources/AppIcon.icns"
 
       - name: Create Release
         id: create_release

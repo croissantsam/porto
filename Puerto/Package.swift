@@ -9,6 +9,7 @@ import PackageDescription
 let package = Package(
     name: "Puerto",
     targets: [
-        .executableTarget(name: "Puerto")
+        .executableTarget(name: "Puerto"),
+        .testTarget(name: "PuertoTests", dependencies: ["Puerto"]),
     ]
 )

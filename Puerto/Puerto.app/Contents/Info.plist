@@ -2,21 +2,13 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>CFBundleExecutable</key>
-	<string>Puerto</string>
-	<key>CFBundleIconFile</key>
-	<string>AppIcon</string>
-	<key>CFBundleIdentifier</key>
-	<string>com.puerto.Puerto</string>
-	<key>CFBundleName</key>
-	<string>Puerto</string>
-	<key>CFBundlePackageType</key>
-	<string>APPL</string>
-	<key>CFBundleShortVersionString</key>
-	<string>0.0.19-05547cd</string>
-	<key>CFBundleVersion</key>
-	<string>19</string>
-	<key>LSUIElement</key>
-	<true/>
+    <key>CFBundleName</key><string>Puerto</string>
+    <key>CFBundleExecutable</key><string>Puerto</string>
+    <key>CFBundleIdentifier</key><string>com.puerto.Puerto</string>
+    <key>CFBundlePackageType</key><string>APPL</string>
+    <key>CFBundleVersion</key><string>23</string>
+    <key>CFBundleShortVersionString</key><string>0.0.23-85807e8</string>
+    <key>CFBundleIconFile</key><string>AppIcon</string>
+    <key>LSUIElement</key><true/>
 </dict>
 </plist>
