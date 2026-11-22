@@ -20,6 +20,7 @@ final class PuertoController: NSObject, NSMenuDelegate {
     private var availableUpdate: AppUpdate?
     private var isCheckingForUpdates = false
     private var isDownloadingUpdate = false
+    private let aboutWindow = AboutWindowController()
 
     /// Monochrome menu-bar glyph; rendered as a template image so it follows
     /// the light/dark menu bar like every other status item.
@@ -100,6 +101,14 @@ final class PuertoController: NSObject, NSMenuDelegate {
         }
 
         menu.addItem(NSMenuItem.separator())
+
+        let aboutItem = NSMenuItem(
+            title: "About Puerto…",
+            action: #selector(showAbout(_:)),
+            keyEquivalent: ""
+        )
+        aboutItem.target = self
+        menu.addItem(aboutItem)
 
         if LaunchAtLogin.isSupported {
             let loginItem = NSMenuItem(
@@ -268,6 +277,10 @@ final class PuertoController: NSObject, NSMenuDelegate {
 
     @objc private func checkForUpdatesAction(_ sender: NSMenuItem) {
         checkForUpdates(manual: true)
+    }
+
+    @objc private func showAbout(_ sender: NSMenuItem) {
+        aboutWindow.show()
     }
 
     @objc private func toggleLaunchAtLogin(_ sender: NSMenuItem) {

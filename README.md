@@ -11,6 +11,7 @@ A macOS menu bar app that shows your open TCP ports and lets you close them with
 - **Click to expand** — each port shows as a submenu with a **✕ Close** action
 - **Auto-refresh** — menu updates every time you open it; background timer updates the count every 2s
 - **In-app updates** — checks GitHub at launch and asks before installing; nothing is downloaded or installed without your say-so
+- **About window** — app icon, version, build number, and a link to [croissantlabs.com/en/apps/puerto](https://croissantlabs.com/en/apps/puerto)
 - **Launch at Login** — menu-bar toggle that registers Puerto as a login item (macOS 13+)
 - **Filters Apple system processes** — hides `rapportd`, `ControlCenter`, and 40+ other macOS daemons
 - **Safe close** — sends `SIGTERM` then escalates to `SIGKILL` after 0.4s
@@ -69,6 +70,7 @@ and is bumped automatically whenever a release is published (see below).
 | `UpdateChecker.swift` | Fetches the latest GitHub release and compares versions |
 | `UpdateInstaller.swift` | Downloads the release zip, verifies its SHA-256, swaps in the new bundle, relaunches |
 | `LaunchAtLogin.swift` | Registers/unregisters the app as a login item (`SMAppService`, macOS 13+) |
+| `AboutWindow.swift` | The About Puerto window (icon, version, website link) |
 
 The menu structure:
 ```
@@ -80,6 +82,7 @@ The menu structure:
   *:8080 — python3 ▸
     ✕ Close
   ───
+  About Puerto…
   ✓ Launch at Login
   ⬇ Update available — v1.2.3   (only when a newer release exists)
   Check for Updates…
@@ -145,7 +148,8 @@ Puerto/
 │   ├── PortCloser.swift             # SIGTERM/SIGKILL
 │   ├── UpdateChecker.swift          # GitHub release check
 │   ├── UpdateInstaller.swift        # Download/verify/swap/relaunch
-│   └── LaunchAtLogin.swift          # SMAppService login-item toggle
+│   ├── LaunchAtLogin.swift          # SMAppService login-item toggle
+│   └── AboutWindow.swift            # About Puerto window
 └── Puerto.app/                      # Built bundle (after build_app.sh)
 ```
 

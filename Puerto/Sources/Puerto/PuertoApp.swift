@@ -74,6 +74,15 @@ struct PuertoApp {
             return
         }
 
+        // Debug helper: show the About window.
+        if ProcessInfo.processInfo.arguments.contains("--about") {
+            let app = NSApplication.shared
+            app.setActivationPolicy(.accessory)
+            AboutWindowController().show()
+            app.run()
+            return
+        }
+
         let app = NSApplication.shared
         app.setActivationPolicy(.accessory)
 

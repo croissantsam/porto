@@ -118,6 +118,17 @@ jobs:
           kill "$pid" 2>/dev/null || true
           wait "$pid" 2>/dev/null || true
 
+          # The About window path should start without crashing.
+          "$APP/Contents/MacOS/Puerto" --about & about_pid=$!
+          sleep 2
+          if ! kill -0 "$about_pid" 2>/dev/null; then
+            echo "::error::Puerto --about exited immediately"
+            wait "$about_pid" || true
+            exit 1
+          fi
+          kill "$about_pid" 2>/dev/null || true
+          wait "$about_pid" 2>/dev/null || true
+
       - name: Create zip artifact
         working-directory: ./Puerto
         run: |
