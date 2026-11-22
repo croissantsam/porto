@@ -2,7 +2,7 @@
 
 A macOS menu bar app that shows your open TCP ports and lets you close them with a click.
 
-![Puerto menu](https://github.com/user-attachments/assets/puerto-menu.png)
+![Puerto menu](./image.png)
 
 ## Features
 
