@@ -103,6 +103,11 @@ The GitHub Actions workflow (`.github/workflows/release.yml`) runs on every push
    a fine-grained PAT with **Contents: read/write** on the tap repo; the step
    skips itself if the secret is absent)
 
+Builds run on `macos-latest`, which tracks the newest GitHub-hosted macOS image,
+so the newest Xcode/Swift toolchain is used without a pinned `setup-swift` step.
+A weekly **Toolchain check** workflow compares the runner's Swift with the latest
+swift.org release and opens a tracking issue when they differ.
+
 **To cut a proper release:**
 ```bash
 git tag v1.0.0
