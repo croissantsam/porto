@@ -48,7 +48,7 @@ jobs:
           echo "macos-latest catalog: Xcode ${LATEST}"
 
           TITLE="Newer Xcode available for macos-latest"
-          EXISTING=$(gh issue list --state open --limit 100 --json number,title | python3 -c "
+          EXISTING=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --limit 100 --json number,title | python3 -c "
           import json, sys
           for issue in json.load(sys.stdin):
               if issue['title'] == '$TITLE':
@@ -65,8 +65,8 @@ jobs:
           if [ "$INSTALLED" = "$LATEST" ]; then
             echo "Toolchain is up to date."
             if [ -n "$EXISTING" ]; then
-              gh issue comment "$EXISTING" --body "Resolved: the runner now has Xcode ${INSTALLED}."
-              gh issue close "$EXISTING"
+              gh issue comment "$EXISTING" --repo "$GITHUB_REPOSITORY" --body "Resolved: the runner now has Xcode ${INSTALLED}."
+              gh issue close "$EXISTING" --repo "$GITHUB_REPOSITORY"
             fi
             exit 0
           fi
@@ -77,8 +77,8 @@ jobs:
 
           if [ -n "$EXISTING" ]; then
             echo "Updating issue #${EXISTING}"
-            gh issue edit "$EXISTING" --body "$BODY"
+            gh issue edit "$EXISTING" --repo "$GITHUB_REPOSITORY" --body "$BODY"
           else
             echo "Creating tracking issue"
-            gh issue create --title "$TITLE" --body "$BODY"
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$TITLE" --body "$BODY"
           fi
