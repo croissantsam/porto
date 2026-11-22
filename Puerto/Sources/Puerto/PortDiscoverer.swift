@@ -24,8 +24,7 @@ enum PortDiscoverer {
     /// Known Apple system processes to hide from the port list.
     private static let appleSystemProcesses: Set<String> = [
         "rapportd",          // Apple rapport daemon
-        "ControlCe",         // Control Center (truncated by lsof)
-        "ControlCenter",     // Full name
+        "ControlCenter",     // Control Center
         "sharingd",          // AirDrop/AirPlay sharing
         "AirPlayUIAgent",    // AirPlay UI
         "coreaudiod",        // Core Audio
@@ -76,7 +75,7 @@ enum PortDiscoverer {
 
         let process = Process()
         process.executableURL = URL(fileURLWithPath: lsofPath)
-        process.arguments = ["-nP", "-iTCP", "-sTCP:LISTEN"]
+        process.arguments = ["+c", "0", "-nP", "-iTCP", "-sTCP:LISTEN"]
         process.standardError = FileHandle.nullDevice
 
         let output = Pipe()

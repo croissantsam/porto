@@ -14,7 +14,7 @@ A macOS menu bar app that shows your open TCP ports and lets you close them with
 - **About window** — app icon, version, build number, and a link to [croissantlabs.com/en/apps/puerto](https://croissantlabs.com/en/apps/puerto)
 - **Launch at Login** — menu-bar toggle that registers Puerto as a login item (macOS 13+)
 - **Filters Apple system processes** — hides `rapportd`, `ControlCenter`, and 40+ other macOS daemons
-- **Safe close** — sends `SIGTERM` then escalates to `SIGKILL` after 0.4s
+- **Safe close** — sends `SIGTERM`, waits 2s for a clean shutdown, then escalates to `SIGKILL` if the same process still owns the port
 - **Only your processes** — won't touch ports owned by other users
 - **No Dock icon** — pure menu bar app (`LSUIElement`)
 
@@ -65,8 +65,8 @@ and is bumped automatically whenever a release is published (see below).
 |-----------|---------|
 | `PuertoApp.swift` | `@main` entry point; handles `--dump-ports` / `--check-updates` flags |
 | `PuertoController.swift` | Status bar item, menu, auto-refresh timer, update menu items |
-| `PortDiscoverer.swift` | Runs `lsof -nP -iTCP -sTCP:LISTEN`, parses output, filters Apple daemons |
-| `PortCloser.swift` | Sends `SIGTERM` → `SIGKILL` to the owning PID |
+| `PortDiscoverer.swift` | Runs `lsof +c 0 -nP -iTCP -sTCP:LISTEN`, parses output, filters Apple daemons |
+| `PortCloser.swift` | Sends `SIGTERM`, then `SIGKILL` if the same PID still owns the port |
 | `UpdateChecker.swift` | Fetches the latest GitHub release and compares versions |
 | `UpdateInstaller.swift` | Downloads the release zip, verifies its SHA-256, swaps in the new bundle, relaunches |
 | `LaunchAtLogin.swift` | Registers/unregisters the app as a login item (`SMAppService`, macOS 13+) |
